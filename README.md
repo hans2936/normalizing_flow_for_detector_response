@@ -1,5 +1,5 @@
 # Generative Machine Learning for Detector Response Modeling with a Conditional Normalizing Flow
-This repository contains the code for [Generative Machine Learning for Detector Response Modeling with a Conditional Normalizing](https://arxiv.org/abs/2303.10148)
+This repository contains the code for [Generative Machine Learning for Detector Response Modeling with a Conditional Normalizing](https://arxiv.org/abs/2303.10148).
 
 ## Installation
 ```bash
@@ -9,12 +9,11 @@ pip install -e .
 ```
 
 ## Instructions
-To train a conditional normalizing flow:
+To train a conditional normalizing flow, use ```train_cond.py``` and specify the configuration file. For generation, use ```generate.py``` and specify the configuration file and model. Optional arguments include the epoch and dataset (test, validation, or train) to use for generation. Use ```plot.ipynb``` to produce plots for generation.
 ```bash
 python train_cond.py --config_file config_nf.yml --log-dir <model_name> --epochs 500
-python generate.py --config_file config_nf.yml --log-dir <model_name> --epochs-total 500 [--epoch <epoch_to_generate> --dataset <test/val/train>]
+python generate.py --config_file config_nf.yml --log-dir <model_name> --epochs-total 500
 ```
-
 
 ## Configuration file
 The configuration can be found in `config_nf.yml` where the following can be specified:
@@ -31,12 +30,11 @@ Hyperparameters:
 - num_bijectors: 10
 - hidden_activation: relu
 
-## Code files
+## Code
 - preprocess.py: load and preprocess data
 - made.py: model definition and construction
 - utils.py: loss functions
 - utils_plot.py: plotting functions
-
 - train_cond.py: train model and evaluate on validation set
 - generate.py: generate detector response for specific epoch of model on the train, validation, or test set
 - plot.ipynb: plot generation
