@@ -59,6 +59,9 @@ truth_branch_names = config['truth_branch_names']
 data_branch_names = config['data_branch_names']
 
 nphotons = 2
+# indices of conditions to use
+cond_keep = [0, 2, 3, 5, 6]
+
 data, scale, label = preprocess.read_data_root(file_name, tree_name, 
                                                out_branch_names,
                                                in_branch_names=truth_branch_names,
@@ -77,7 +80,6 @@ if dataset == 'train':
 elif dataset == 'val':
     test_in, test_truth, test_other = val_in, val_truth, val_other
 
-
 # load model
 hidden_shape = [config['latent_size']]*config['num_layers']
 layers = config['num_bijectors']
@@ -85,7 +87,7 @@ lr = config['lr']
 batch_size = config['batch_size']
 
 dim_truth = train_truth.shape[1]
-dim_cond = train_in.shape[1]
+dim_cond = len(cond_keep)
 flow_model = create_conditional_flow(hidden_shape, layers, 
                                      input_dim=dim_truth, conditional_event_shape=(dim_cond,), out_dim=2)
 
@@ -127,7 +129,7 @@ def evaluate(flow_model, testing_data, cond_kwargs):
     return np.average(distances), samples
 
 testing_batch = tf.cast(tf.convert_to_tensor(test_truth), 'float32')
-testing_cond = tf.cast(tf.convert_to_tensor(test_in), 'float32')
+testing_cond = tf.cast(tf.convert_to_tensor(test_in[:, cond_keep]), 'float32')
 cond_kwargs = dict([(f"b{idx}", {"conditional_input": testing_cond}) for idx in range(layers)])
 
 wdis, predictions = evaluate(flow_model, test_truth, cond_kwargs)
@@ -148,6 +150,7 @@ print('Saving', file)
 f = h5py.File(file, "w")
 f.create_dataset('scale', data = truth_in_scale)
 f.create_dataset('condition_scale', data = input_data_scale.to_numpy())
+f.create_dataset('condition_keep', data = np.array(cond_keep))
 f.close()
 
 df_test_in = pd.DataFrame(test_in, columns = labels_in)

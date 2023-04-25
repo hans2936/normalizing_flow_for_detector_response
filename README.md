@@ -1,5 +1,5 @@
 # Generative Machine Learning for Detector Response Modeling with a Conditional Normalizing Flow
-This repository contains the code for [Generative Machine Learning for Detector Response Modeling with a Conditional Normalizing](https://arxiv.org/abs/2303.10148).
+This repository contains the code for [Generative Machine Learning for Detector Response Modeling with a Conditional Normalizing Flow](https://arxiv.org/abs/2303.10148).
 
 ## Installation
 ```bash

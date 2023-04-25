@@ -106,10 +106,6 @@ def read_data_root(file_name, tree_name,
             in_branch_names = [b[:-1] for b in in_branch_names if '1' in b]
             out_branch_names = [b[:-1] for b in out_branch_names if '1' in b]
     
-    print('\n{} output, {} input, {} total data'.format(len(out_branch_names), len(in_branch_names), len(data_branch_names)))
-    print('Generating:', out_branch_names)
-    print('Input data:', in_branch_names, '\n')
-    
     out_particles = df[out_branch_names]
     branch_scale = {}
     
@@ -207,10 +203,6 @@ def read_data_root(file_name, tree_name,
     data = (train_in, train_truth, train_other, val_in, val_truth, val_other, test_in, test_truth, test_other)
     scale = (branch_scale, truth_in_scale, input_data_scale)
     label = (in_branch_names, out_branch_names, data_branch_names)
-        
-    print('training:', train_truth.shape, 
-          'validation:', val_truth.shape,
-          'test:', test_truth.shape)
     
     to_return = (data, scale, label)
     return to_return

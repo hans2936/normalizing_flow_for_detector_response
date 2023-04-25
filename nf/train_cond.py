@@ -56,6 +56,14 @@ def train(train_truth, train_in, testing_truth, test_in, flow_model, lr, batch_s
         start_epoch = 0
         print("Initializing from scratch.")
     
+    labels = plot_config['labels']
+    nphotons = plot_config['nphotons']
+    cond_keep = plot_config['cond_keep']
+    
+    train_in = train_in[:, cond_keep]
+    test_in_plot = test_in # include truth phi for plotting
+    test_in = test_in[:, cond_keep]
+    
     AUTO = tf.data.experimental.AUTOTUNE
     training_data = tf.data.Dataset.from_tensor_slices(
         (train_in, train_truth)).batch(batch_size).prefetch(AUTO)
@@ -66,9 +74,6 @@ def train(train_truth, train_in, testing_truth, test_in, flow_model, lr, batch_s
     os.makedirs(log_dir, exist_ok=True)
     csv_dir = os.path.join(outdir, "csv")
     os.makedirs(csv_dir, exist_ok=True)
-    
-    labels = plot_config['labels']
-    nphotons = plot_config['nphotons']
 
     # start training
     summary_logfile = os.path.join(log_dir, 'results.txt')
@@ -123,7 +128,7 @@ def train(train_truth, train_in, testing_truth, test_in, flow_model, lr, batch_s
             compare(predictions, testing_truth, img_dir, i, [-1, 1], labels, nphotons)
             plot_corr(predictions, img_dir, i, labels)
             if nphotons == 2:
-                plot_yy_cond(predictions, testing_truth, test_in, 
+                plot_yy_cond(predictions, testing_truth, test_in_plot, 
                              labels, plot_config['scale'], img_dir, i, nphotons)
             
             save_path = os.path.join(csv_dir, 'pred_epoch_{:04d}.csv'.format(i))
@@ -172,6 +177,9 @@ if __name__ == '__main__':
     data_branch_names = config['data_branch_names']
     
     nphotons = 2
+    # indices of conditions to use
+    cond_keep = [0, 2, 3, 5, 6]
+    
     data, scale, label = preprocess.read_data_root(file_name, tree_name, 
                                                    out_branch_names,
                                                    in_branch_names=truth_branch_names,
@@ -183,6 +191,14 @@ if __name__ == '__main__':
     train_in, train_truth, train_other, val_in, val_truth, val_other, test_in, test_truth, test_other = data
     in_branch_names, out_branch_names, data_branch_names = label
     
+    print('\n{} output, {} input, {} total data'.format(len(out_branch_names), len(cond_keep), len(data_branch_names)))
+    print('Generating:', out_branch_names)
+    print('Input data:', [b for i, b in enumerate(in_branch_names) if i in cond_keep], '\n')
+    
+    print('training:', train_truth.shape, 
+          'validation:', val_truth.shape,
+          'test:', test_truth.shape)
+    
     outdir = os.path.join('trained_results', args.log_dir)
     hidden_shape = [config['latent_size']]*config['num_layers']
     layers = config['num_bijectors']
@@ -191,10 +207,11 @@ if __name__ == '__main__':
     max_epochs = args.epochs
     
     dim_truth = train_truth.shape[1]
-    dim_cond = train_in.shape[1]
+    dim_cond = len(cond_keep)
     maf = create_conditional_flow(hidden_shape, layers, input_dim=dim_truth, conditional_event_shape=(dim_cond,), out_dim=2)
     
     plot_config = {'nphotons': nphotons,
                    'labels': out_branch_names,
-                   'scale': scale}
+                   'scale': scale,
+                   'cond_keep': cond_keep}
     train(train_truth, train_in, val_truth, val_in, maf, lr, batch_size, layers, max_epochs, outdir, plot_config)
