@@ -315,7 +315,7 @@ def undo_scaling_cond(predictions, testing_truth, test_in, labels, scale):
         branch_scale, truth_in_scale, input_data_scale = scale
         pred_scaled = pred_scaled * truth_in_scale
         truths_scaled = truths_scaled * truth_in_scale
-        test_in = test_in * input_data_scale.to_numpy()
+        test_in = test_in * input_data_scale
         pred_feat = test_in[:, :6] + pred_scaled
         truth_feat = test_in[:, :6] + truths_scaled
     return pred_scaled, truths_scaled, pred_feat, truth_feat, test_in

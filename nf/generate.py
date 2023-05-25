@@ -58,9 +58,9 @@ out_branch_names = config['out_branch_names']
 truth_branch_names = config['truth_branch_names']
 data_branch_names = config['data_branch_names']
 
-nphotons = 2
+nphotons = config['nphotons']
 # indices of conditions to use
-cond_keep = [0, 2, 3, 5, 6]
+cond_keep = config['cond_keep']
 
 data, scale, label = preprocess.read_data_root(file_name, tree_name, 
                                                out_branch_names,
@@ -83,13 +83,15 @@ elif dataset == 'val':
 # load model
 hidden_shape = [config['latent_size']]*config['num_layers']
 layers = config['num_bijectors']
+activation = config['activation']
 lr = config['lr']
 batch_size = config['batch_size']
 
 dim_truth = train_truth.shape[1]
 dim_cond = len(cond_keep)
 flow_model = create_conditional_flow(hidden_shape, layers, 
-                                     input_dim=dim_truth, conditional_event_shape=(dim_cond,), out_dim=2)
+                                     input_dim=dim_truth, conditional_event_shape=(dim_cond,), out_dim=2,
+                                     activation=activation)
 
 
 base_lr = lr
@@ -149,7 +151,7 @@ print('Saving', file)
 
 f = h5py.File(file, "w")
 f.create_dataset('scale', data = truth_in_scale)
-f.create_dataset('condition_scale', data = input_data_scale.to_numpy())
+f.create_dataset('condition_scale', data = input_data_scale)
 f.create_dataset('condition_keep', data = np.array(cond_keep))
 f.close()
 
@@ -158,11 +160,13 @@ df_test_truth = pd.DataFrame(test_truth, columns = labels)
 pred_scaled = pd.DataFrame(predictions, columns = labels) * truth_in_scale
 truths_scaled = pd.DataFrame(test_truth, columns = labels) * truth_in_scale
 
-test_in_scaled = test_in * input_data_scale.to_numpy()
+test_in_scaled = test_in * input_data_scale
 pred_feat = test_in_scaled[:,:dim_truth] + pred_scaled
 truth_feat = test_in_scaled[:,:dim_truth] + truths_scaled
 
-labels_feat = ['ph_pt1', 'ph_phi1', 'ph_eta1', 'ph_pt2', 'ph_phi2', 'ph_eta2']
+labels_feat = ['ph_pt', 'ph_phi', 'ph_eta']
+if nphotons > 1:
+    labels_feat = [label+str(i) for i in range(1, nphotons+1) for label in labels_feat]
 pred_feat.columns = labels_feat
 truth_feat.columns = labels_feat
 

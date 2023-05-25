@@ -176,9 +176,9 @@ if __name__ == '__main__':
     truth_branch_names = config['truth_branch_names']
     data_branch_names = config['data_branch_names']
     
-    nphotons = 2
+    nphotons = config['nphotons']
     # indices of conditions to use
-    cond_keep = [0, 2, 3, 5, 6]
+    cond_keep = config['cond_keep']
     
     data, scale, label = preprocess.read_data_root(file_name, tree_name, 
                                                    out_branch_names,
@@ -202,13 +202,16 @@ if __name__ == '__main__':
     outdir = os.path.join('trained_results', args.log_dir)
     hidden_shape = [config['latent_size']]*config['num_layers']
     layers = config['num_bijectors']
+    activation = config['activation']
     lr = config['lr']
     batch_size = config['batch_size']
     max_epochs = args.epochs
     
     dim_truth = train_truth.shape[1]
     dim_cond = len(cond_keep)
-    maf = create_conditional_flow(hidden_shape, layers, input_dim=dim_truth, conditional_event_shape=(dim_cond,), out_dim=2)
+    maf = create_conditional_flow(hidden_shape, layers, 
+                                  input_dim=dim_truth, conditional_event_shape=(dim_cond,), out_dim=2, 
+                                  activation=activation)
     
     plot_config = {'nphotons': nphotons,
                    'labels': out_branch_names,

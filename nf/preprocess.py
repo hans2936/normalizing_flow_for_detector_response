@@ -18,8 +18,7 @@ def read_data_root(file_name, tree_name,
                    in_branch_names=None, # optional: conditional variables to input
                    data_branch_names=None, # optional: additional variables
                    max_evts=None, test_frac=0.1, val_frac=0.1,
-                   fixed_num_particles=True, num_particles=2, 
-                   use_cond=False, sample='delphes'):
+                   num_particles=2, use_cond=False, sample='delphes'):
     """
     Read ROOT data file
     Given filename or list of filenames, return train/test inputs and truth
@@ -92,19 +91,33 @@ def read_data_root(file_name, tree_name,
             cols_ph1 = [b for b in df.columns if '1' in b]
             cols_ph2 = [b for b in df.columns if '2' in b]
             cols = [b[:-1] for b in cols_ph1]
+            cols_other = [b for b in df.columns if b not in cols_ph1 and b not in cols_ph2]
             
             df_ph1 = df[cols_ph1]
             df_ph2 = df[cols_ph2]
             df_ph1.columns = cols
             df_ph2.columns = cols
-            df = pd.concat([df_ph1, df_ph2])
+            df_ph = pd.concat([df_ph1, df_ph2])
+            
+            df_other = df[cols_other]
+            df_other = pd.concat([df_other, df_other])
+            df = pd.concat([df_ph, df_other], axis=1)
             
             drop_events = (np.abs(df['ph_diff_pt']) > 20)
             df = df[~drop_events]
-
-            data_branch_names = [b[:-1] for b in data_branch_names if '1' in b]
-            in_branch_names = [b[:-1] for b in in_branch_names if '1' in b]
-            out_branch_names = [b[:-1] for b in out_branch_names if '1' in b]
+            
+            def modify_bn(branches):
+                branches_new = []
+                for b in branches:
+                    if '1' in b:
+                        branches_new += [b[:-1]]
+                    elif '2' not in b:
+                        branches_new += [b]
+                return branches_new
+            
+            data_branch_names = modify_bn(data_branch_names)
+            in_branch_names = modify_bn(in_branch_names)
+            out_branch_names = modify_bn(out_branch_names)
     
     out_particles = df[out_branch_names]
     branch_scale = {}
@@ -127,10 +140,10 @@ def read_data_root(file_name, tree_name,
         truth_in = truth_in.to_numpy()
     else:
         # scale to (-1, 1)
-        truth_in_scale = out_particles.abs().max() + 1e-6
+        truth_in_scale = out_particles.abs().max().to_numpy() + 1e-6
         truth_in = out_particles / truth_in_scale
         truth_in = truth_in.to_numpy()
-        print("Truth scale:", dict(truth_in_scale))
+    print("Truth scale:", truth_in_scale)
     
     if len(in_branch_names) > 0:
         input_data = df[in_branch_names]
@@ -141,13 +154,13 @@ def read_data_root(file_name, tree_name,
                     x = x - np.median(x)
                     input_data.loc[:, b] = x
         
-        input_data_scale = input_data.abs().max()
+        input_data_scale = input_data.abs().max().to_numpy()
         input_data = input_data / input_data_scale
         input_data = input_data.to_numpy()
     else:
         input_data = np.array([])
         input_data_scale = np.array([])
-    print("Input scale:", dict(input_data_scale))
+    print("Input scale:", input_data_scale)
         
     if len(data_branch_names) > 0:
         other_data = df[data_branch_names].to_numpy()
@@ -160,23 +173,26 @@ def read_data_root(file_name, tree_name,
     input_data = input_data[~drop]
     other_data = other_data[~drop]
     
+    num_evts = truth_in.shape[0]
+    if max_evts and num_evts > max_evts:
+        num_evts = max_evts
+
     if sample == 'delphes':
         # Split by fold
-        fold = df[~drop]['fold'].values      
+        fold = df[~drop]['fold'].values[:num_evts]
         test = (fold == 0)
         val = (fold == 1)
         train = (fold >= 2)
+        
+        input_data = input_data[:num_evts]
+        truth_in = truth_in[:num_evts]
+        other_data = other_data[:num_evts]
+        
         test_in, val_in, train_in = input_data[test], input_data[val], input_data[train]
         test_truth, val_truth, train_truth = truth_in[test], truth_in[val], truth_in[train]
         test_other, val_other, train_other = other_data[test], other_data[val], other_data[train]
     else:
         # Split by random shuffling
-        num_evts = truth_in.shape[0]
-        if max_evts and (truth_in.shape[0] > max_evts):
-            num_evts = max_evts
-        num_test_evts = int(num_evts*test_frac)
-        num_val_evts = int(num_evts*val_frac) + num_test_evts
-
         # <NOTE, https://numpy.org/doc/stable/reference/random/generated/numpy.random.seed.html>
         from numpy.random import MT19937
         from numpy.random import RandomState, SeedSequence
@@ -189,8 +205,10 @@ def read_data_root(file_name, tree_name,
             truth_in = truth_in[idx]
         if len(other_data) > 0:
             other_data = other_data[idx]
+            
+        num_test_evts = int(num_evts*test_frac)
+        num_val_evts = int(num_evts*val_frac) + num_test_evts
 
-        # empty arrays for test_in and train_in if no conditions
         test_in, val_in, train_in = input_data[:num_test_evts], input_data[num_test_evts:num_val_evts], input_data[num_val_evts:num_evts]
         test_truth, val_truth, train_truth = truth_in[:num_test_evts], truth_in[num_test_evts:num_val_evts], truth_in[num_val_evts:num_evts]
         test_other, val_other, train_other = other_data[:num_test_evts], other_data[num_test_evts:num_val_evts], other_data[num_val_evts:num_evts]

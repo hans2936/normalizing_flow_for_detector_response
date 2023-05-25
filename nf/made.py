@@ -47,7 +47,7 @@ class Made(tfk.layers.Layer):
         return shift, tf.math.tanh(log_scale)
 
 
-def create_flow(hidden_shape: list, layers: int, input_dim: int, out_dim=2):
+def create_flow(hidden_shape: list, layers: int, input_dim: int, out_dim=2, activation='relu'):
     """Create Masked Autogressive Flow for density estimation
 
     Arguments:
@@ -63,7 +63,7 @@ def create_flow(hidden_shape: list, layers: int, input_dim: int, out_dim=2):
     for i in range(layers):
         bijectors.append(tfb.MaskedAutoregressiveFlow(
             shift_and_log_scale_fn=Made(
-                params=out_dim, event_shape=[input_dim], hidden_units=hidden_shape, activation='relu')
+                params=out_dim, event_shape=[input_dim], hidden_units=hidden_shape, activation=activation)
         ))
         bijectors.append(tfb.Permute(permutation=permutation))
     bijectors.append(tfb.Tanh())
@@ -80,7 +80,8 @@ def create_conditional_flow(
         hidden_shape: list, layers: int,
         input_dim: int, 
         conditional_event_shape: tuple,
-        out_dim=2):
+        out_dim=2,
+        activation='relu'):
     """Create Conditional Masked Autogressive Flow for density estimation
 
     Arguments:
@@ -101,7 +102,7 @@ def create_conditional_flow(
                 event_shape=[input_dim],
                 conditional=True,
                 conditional_event_shape=conditional_event_shape,
-                hidden_units=hidden_shape, activation='relu'),
+                hidden_units=hidden_shape, activation=activation),
             name=f"b{i}"
         ))
         if input_dim > 1:

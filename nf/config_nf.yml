@@ -9,15 +9,13 @@ out_branch_names: ['smearph_pt', 'smearph_eta', 'smearph_phi']
 truth_branch_names: ['genph_pt', 'genph_eta', 'genph_phi']
 data_branch_names: ['GenMET_phi', 'mu']
 
-output_dim: 6
-plot_nrow: 2
-plot_ncol: 3
+nphotons: 2
+cond_keep: [0, 2, 3, 5, 6]
 
 ### Hyperparameters
 lr: 0.001
 batch_size: 512
-
 num_layers: 2
 latent_size: 128
 num_bijectors: 10
-hidden_activation: 'ReLU'
+activation: 'relu'
