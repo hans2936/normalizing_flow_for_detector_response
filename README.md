@@ -15,7 +15,7 @@ python train_cond.py --config_file config_nf.yml --log-dir <model_name> --epochs
 python generate.py --config_file config_nf.yml --log-dir <model_name> --epochs-total 100
 ```
 Note: 
-- by default, `<model_name>` is `NF` in the `config_nf.yml`
+- `<model_name>` only clarifies the output path, it can be anything
 - number of epochs can be increased to imporve the performance
 
 ## Configuration file
