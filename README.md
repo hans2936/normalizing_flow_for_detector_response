@@ -11,9 +11,12 @@ pip install -e .
 ## Instructions
 To train a conditional normalizing flow, use ```train_cond.py``` and specify the configuration file. For generation, use ```generate.py``` and specify the configuration file and model. Optional arguments include the epoch and dataset (test, validation, or train) to use for generation. Use ```plot.ipynb``` to produce plots for generation.
 ```bash
-python train_cond.py --config_file config_nf.yml --log-dir <model_name> --epochs 500
-python generate.py --config_file config_nf.yml --log-dir <model_name> --epochs-total 500
+python train_cond.py --config_file config_nf.yml --log-dir <model_name> --epochs 100
+python generate.py --config_file config_nf.yml --log-dir <model_name> --epochs-total 100
 ```
+Note: 
+- by default, `<model_name>` is `NF` in the `config_nf.yml`
+- number of epochs can be increased to imporve the performance
 
 ## Configuration file
 The configuration can be found in `config_nf.yml` where the following can be specified:
