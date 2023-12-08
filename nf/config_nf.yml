@@ -1,6 +1,6 @@
 config: 'config_nf.yml'
 model: 'NF'
-file_name: ['/global/cfs/projectdirs/atlas/hanshuo/Tutorial/SmearPhoton/ttHyy_smear_corr0.root']
+file_name: ['/global/cfs/projectdirs/atlas/hanshuo/Tutorial/SmearPhoton/ttHyy_smear_corr0_example.root']
 sample: 'delphes'
 tree_name: 'output'
 

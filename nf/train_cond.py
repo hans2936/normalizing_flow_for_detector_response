@@ -113,7 +113,8 @@ def train(train_truth, train_in, testing_truth, test_in, flow_model, lr, batch_s
             batch = tf.cast(batch, 'float32')
             condition = tf.cast(condition, 'float32')
             train_loss += [train_density_estimation_cond(flow_model, opt, batch, condition, layers)]
-            lr += [opt.lr.numpy()]
+            #lr += [opt.lr.numpy()]
+            lr += [opt.lr(opt.iterations).numpy()]
             
         train_loss = np.array(train_loss)
         avg_loss = np.sum(train_loss, axis=0)/train_loss.shape[0]
